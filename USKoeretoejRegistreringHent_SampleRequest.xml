@@ -1,0 +1,11 @@
+<p1:USKoeretoejRegistreringHent_I xmlns:p1="http://skat.dk/dmr/2007/05/31/">
+    <p2:HovedOplysninger xmlns:p2="http://rep.oio.dk/skat.dk/basis/kontekst/xml/schemas/2006/09/01/">
+        <p2:TransaktionIdentifikator>e0f95ed1-1e03-4d90-9584-ffafb3523d16</p2:TransaktionIdentifikator>
+        <p2:TransaktionTid>2023-03-21T12:16:37.652Z</p2:TransaktionTid>
+    </p2:HovedOplysninger>
+    <p1:KoeretoejGenerelIdentifikatorStruktur>
+        <p1:KoeretoejGenerelIdentifikatorValg>
+            <p1:RegistreringNummerNummer>AB12345</p1:RegistreringNummerNummer>
+        </p1:KoeretoejGenerelIdentifikatorValg>
+    </p1:KoeretoejGenerelIdentifikatorStruktur>
+</p1:USKoeretoejRegistreringHent_I>
