@@ -1,0 +1,13 @@
+<ns:USKoeretoejDetaljerVis_I xmlns:ns="http://skat.dk/dmr/2007/05/31/">
+    <ns1:HovedOplysninger
+        xmlns:ns1="http://rep.oio.dk/skat.dk/basis/kontekst/xml/schemas/2006/09/01/">
+        <ns1:TransaktionIdentifikator>d6d8711a-6e30-4707-b33d-9d6d707e46e0</ns1:TransaktionIdentifikator>
+        <ns1:TransaktionTid>2023-03-21T12:16:37.652Z</ns1:TransaktionTid>
+    </ns1:HovedOplysninger>
+    <ns:DatoTidSoegTidspunkt>2023-03-21T12:16:37.652Z</ns:DatoTidSoegTidspunkt>
+    <ns:KoeretoejGenerelIdentifikatorStruktur>
+        <ns:KoeretoejGenerelIdentifikatorValg>
+            <ns:KoeretoejIdent>9000000005356232</ns:KoeretoejIdent>
+        </ns:KoeretoejGenerelIdentifikatorValg>
+    </ns:KoeretoejGenerelIdentifikatorStruktur>
+</ns:USKoeretoejDetaljerVis_I>

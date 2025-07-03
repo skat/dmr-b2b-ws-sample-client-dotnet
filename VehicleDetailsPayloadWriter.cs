@@ -3,12 +3,22 @@ using System.Xml;
 
 namespace UFSTWSSecuritySample
 {
+
+    public enum VehicleIdType
+    {
+        VIN,
+        KID,
+        REG
+    }
+
     public class VehicleDetailsPayloadWriter : IPayloadWriter
     {
-        public VehicleDetailsPayloadWriter(string vin)
+        public VehicleDetailsPayloadWriter(string id, VehicleIdType type)
         {
-            Vin = vin;
+            Id = id;
+            Type = type;
         }
+
         public void Write(XmlTextWriter writer)
         {
             var now = DateTime.UtcNow.ToString("o").Substring(0, 23) + "Z";
@@ -31,16 +41,31 @@ namespace UFSTWSSecuritySample
 
             writer.WriteStartElement("ns", "KoeretoejGenerelIdentifikatorStruktur", null);
             writer.WriteStartElement("ns", "KoeretoejGenerelIdentifikatorValg", null);
+            if (Type == VehicleIdType.VIN) {
+                writer.WriteStartElement("ns", "KoeretoejOplysningStelNummer", null);
+                writer.WriteString(Id);
+                writer.WriteEndElement(); // KoeretoejOplysningStelNummer
+            }
+            if (Type == VehicleIdType.KID) {
+                writer.WriteStartElement("ns", "KoeretoejIdent", null);
+                writer.WriteString(Id);
+                writer.WriteEndElement(); // KoeretoejIdent
 
-            writer.WriteStartElement("ns", "KoeretoejOplysningStelNummer", null);
-            writer.WriteString(Vin);
-            writer.WriteEndElement(); // KoeretoejOplysningStelNummer
+            }
+            if (Type == VehicleIdType.REG) {
+                writer.WriteStartElement("ns", "RegistreringNummerNummer", null); // TODO
+                writer.WriteString(Id);
+                writer.WriteEndElement(); // RegistreringNummerNummer
 
+            }
             writer.WriteEndElement(); // KoeretoejGenerelIdentifikatorValg
             writer.WriteEndElement(); // KoeretoejGenerelIdentifikatorStruktur
             writer.WriteEndElement(); // USKoeretoejDetaljerVis_I
         }
 
-        private string Vin { get; }
+        private string Id { get; }
+
+        private VehicleIdType Type { get; }
+
     }
 }

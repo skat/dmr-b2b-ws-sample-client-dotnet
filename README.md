@@ -1,6 +1,6 @@
 # Danish Register of Motor Vehicles - API/B2B Integration - .NET Core Sample
 
-Sample client for the Register of Motor Vehicles **B2B Web Service Gateway** developed in .NET Core.
+Sample client for the Register of Motor Vehicles **B2B Web Service Gateway** developed in .NET Core. The code in this repo has been developed and tested with .NET 9.0.301
 
 > **IMPORTANT NOTICE**: UFST does not provide any kind of support for the code in this repository.
 > This client is just one example of how a B2B web service can be accessed. The client must not be 
@@ -35,7 +35,7 @@ with the contents of `appsettings-secret.json` provided to you by UFST.
 Finally, run application, e.g. using the `RequestFromFilePayloadWriter` mode:
 
 ```
-$ dotnet run RequestFromFilePayloadWriter USMiljoeordningForBiler USKoeretoejDetaljerVis_SampleRequest.xml USKoeretoejDetaljerVis_SampleResponse.xml
+$ dotnet run RequestFromFilePayloadWriter USMiljoeordningForBiler USKoeretoejDetaljerVis_SampleRequest-KoeretoejOplysningStelNummer.xml USKoeretoejDetaljerVis_SampleResponse-KoeretoejOplysningStelNummer.xml
 ```
 
 or
@@ -44,11 +44,24 @@ or
 $ dotnet run RequestFromFilePayloadWriter USForsikring USKoeretoejRegistreringHent_SampleRequest.xml USKoeretoejRegistreringHent_SampleResponse.xml 
 ```
 
-or using the `PayloadWriter` mode:
+Use the `PayloadWriter` mode to query by KID:
 
 ```
-$ dotnet run PayloadWriter USKoeretoejDetaljerVis
+$ dotnet run PayloadWriter USKoeretoejDetaljerVis KID 9000000002693671
 ```
+
+Use the `PayloadWriter` mode to query by VIN:
+
+```
+$ dotnet run PayloadWriter USKoeretoejDetaljerVis VIN L4H5EA306J6000212
+```
+
+Use the `PayloadWriter` mode to query by registration number:
+
+```
+$ dotnet run PayloadWriter USKoeretoejDetaljerVis REG CM4607
+```
+
 
 ## Call modes
 

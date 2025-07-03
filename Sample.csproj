@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>61bda669-96aa-407f-8b62-c130da5d29ad</UserSecretsId>
   </PropertyGroup>

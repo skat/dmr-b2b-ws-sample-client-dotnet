@@ -455,4 +455,5 @@ $RECYCLE.BIN/
 
 appsettings-secret*.json
 *SampleResponse.xml
+*SampleResponse*.xml
 temp

@@ -47,15 +47,18 @@ namespace UFSTWSSecuritySample
             switch (command)
             {
                 case "PayloadWriter":
-                    if (args.Length == 2)
+                    if (args.Length == 4)
                     {
                         Console.WriteLine("Running in 'PayloadWriter' mode.");
                         var service = args[1];
+                        var type = args[2];
+                        var id = args[3];
+                        VehicleIdType vehicleIdType = Enum.Parse<VehicleIdType>(type);
                         IApiClient client = new ApiClient(settings);
                         switch (service)
                         {
                             case "USKoeretoejDetaljerVis":
-                                await client.CallService(new VehicleDetailsPayloadWriter("AB12345"), endpoints.USMiljoeordningForBiler);
+                                await client.CallService(new VehicleDetailsPayloadWriter(id, vehicleIdType), endpoints.USMiljoeordningForBiler);
                                 Console.WriteLine("Finished");
                                 break;
                         }
@@ -72,6 +75,7 @@ namespace UFSTWSSecuritySample
                         // Convert app settings endpoint to lookup table
                         hashtable.Add("USMiljoeordningForBiler", endpoints.USMiljoeordningForBiler);
                         hashtable.Add("USForsikring", endpoints.USForsikring);
+                        hashtable.Add("USKoeretoejDetaljerVis", endpoints.USKoeretoejDetaljerVis);
 
                         String endpoint = (string)hashtable[serviceEndpointKey];
                         if (String.IsNullOrEmpty(endpoint))
