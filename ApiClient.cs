@@ -25,8 +25,7 @@ namespace UFSTWSSecuritySample
 
         private X509Certificate2 GetCertificate()
         {
-            var certificateContent = File.ReadAllBytes(Settings.PathPKCS12);
-            return new X509Certificate2(certificateContent, Settings.PKCS12Passphrase);
+            return X509CertificateLoader.LoadPkcs12FromFile(Settings.PathPKCS12, Settings.PKCS12Passphrase);
         }
 
         private void WriteEnvelope(String envelope)
@@ -122,7 +121,9 @@ namespace UFSTWSSecuritySample
 
                     XmlNodeList xmlNodeList = xmlDocument.GetElementsByTagName("wsse:BinarySecurityToken");
                     string binarySecurityToken = xmlNodeList[0].InnerText;
-                    X509Certificate2 x509Certificate2 = new X509Certificate2(Convert.FromBase64String(binarySecurityToken));
+                    // Wrap in PWM to satisfy X509CertificateLoader.LoadCertificate API:
+                    string binarySecurityTokenPEM = "-----BEGIN CERTIFICATE-----\n" + binarySecurityToken + "\n-----END CERTIFICATE-----";
+                    X509Certificate2 x509Certificate2 = X509CertificateLoader.LoadCertificate(Encoding.UTF8.GetBytes(binarySecurityTokenPEM));
 
                     xmlNodeList = xmlDocument.GetElementsByTagName("Signature", "http://www.w3.org/2000/09/xmldsig#");
                     XmlElement signature = (XmlElement)xmlNodeList[0];
