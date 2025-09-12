@@ -62,6 +62,15 @@ Use the `PayloadWriter` mode to query by registration number:
 $ dotnet run PayloadWriter USKoeretoejDetaljerVis REG CM4607
 ```
 
+Use the `ExtractViaKIDLookup` mode to query by KID and the *N* next KID numbers:
+
+
+```
+$ dotnet run ExtractViaKIDLookup 9000000001018035 3
+```
+
+
+
 
 ## Call modes
 

@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Collections;
+using System.Xml;
 
 namespace UFSTWSSecuritySample
 {
@@ -43,9 +44,44 @@ namespace UFSTWSSecuritySample
                 return;
             }
 
+            var requestInterceptors = new LinkedList<IClientIinterceptor>();
+            if (settings.LogRequest)
+            {
+                requestInterceptors.AddLast(new LogEnvelopeInterceptor());
+            }
+            var responseInterceptors = new LinkedList<IClientIinterceptor>();
+            if (settings.LogResponse)
+            {
+                responseInterceptors.AddLast(new LogEnvelopeInterceptor());
+            }
+
             var command = args[0];
             switch (command)
             {
+                case "ExtractViaKIDLookup":
+                    if (args.Length == 3)
+                    {
+                        Console.WriteLine("Running in 'ExtractKID' mode.");
+                        var id = args[1];
+                        var next = args[2];
+                        VehicleIdType vehicleIdType = VehicleIdType.KID;
+                        IApiClient client = new ApiClient(settings);
+
+                        int m = Int32.Parse(next);
+                        for (int i = 1; i <= m; i++)
+                        {
+                            XmlDocument response = await client.CallService(new VehicleDetailsPayloadWriter(id, vehicleIdType), requestInterceptors, responseInterceptors, endpoints.USMiljoeordningForBiler);
+                            if (response != null)
+                            {
+                                USKoeretoejDetaljerVisResponsePayloadProcessor proc = new USKoeretoejDetaljerVisResponsePayloadProcessor(response);
+                                if (!proc.HasErrors())
+                                {
+                                    proc.Process();
+                                }
+                            }
+                        }
+                    }
+                    break;
                 case "PayloadWriter":
                     if (args.Length == 4)
                     {
@@ -58,8 +94,7 @@ namespace UFSTWSSecuritySample
                         switch (service)
                         {
                             case "USKoeretoejDetaljerVis":
-                                await client.CallService(new VehicleDetailsPayloadWriter(id, vehicleIdType), endpoints.USMiljoeordningForBiler);
-                                Console.WriteLine("Finished");
+                                XmlNode node = await client.CallService(new VehicleDetailsPayloadWriter(id, vehicleIdType), requestInterceptors, responseInterceptors, endpoints.USMiljoeordningForBiler);
                                 break;
                         }
                     }
@@ -82,24 +117,17 @@ namespace UFSTWSSecuritySample
                         {
                             Console.WriteLine("Cannot endpoint configuration for: " + serviceEndpointKey);
                             return;
-                        }                         
+                        }
                         if (!File.Exists(requestFilePath))
                         {
                             Console.WriteLine("Cannot find " + requestFilePath);
                             return;
                         }
-                        if (File.Exists(responseFilePath))
-                        {
-                            Console.WriteLine("The file " + responseFilePath + " already exists. Will delete file before doing call.");
-                            File.Delete(responseFilePath
-                            );
-                            Console.WriteLine(responseFilePath + " deleted.");
-                        }
-                        IApiClient client = new ApiClient(settings, responseFilePath);
-
+                        responseInterceptors.AddLast(new SavePayloadToFileInteceptor(responseFilePath));
+                        IApiClient client = new ApiClient(settings);
                         IPayloadWriter pw = new RequestFromFilePayloadWriter(requestFilePath);
-                        await client.CallService(pw, endpoints.USMiljoeordningForBiler);
-                        Console.WriteLine("Finished");
+                        await client.CallService(pw, requestInterceptors, responseInterceptors, endpoints.USMiljoeordningForBiler);
+
                         return;
                     }
                     break;
@@ -110,6 +138,7 @@ namespace UFSTWSSecuritySample
                     Console.WriteLine("dotnet run Generic [serviceEndpointKey] [request file] [response file]");
                     break;
             }
+            Console.WriteLine("Finished");
         }
     }
 }

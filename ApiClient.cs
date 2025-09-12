@@ -17,19 +17,17 @@ namespace UFSTWSSecuritySample
         {
             Settings = settings;
         }
-        public ApiClient(Settings settings, String reponseFilePath)
-        {
-            Settings = settings;
-            ReponseFilePath = reponseFilePath;
-        }
 
         private X509Certificate2 GetCertificate()
         {
             return X509CertificateLoader.LoadPkcs12FromFile(Settings.PathPKCS12, Settings.PKCS12Passphrase);
         }
 
-        private void WriteEnvelope(String envelope)
+        private void WriteDocument(XmlDocument xmlDocument)
         {
+            Console.WriteLine("----- WriteDocument ");
+
+
             var xmlWriterSettings = new XmlWriterSettings();
             xmlWriterSettings.OmitXmlDeclaration = true;
             xmlWriterSettings.Indent = true;
@@ -37,24 +35,18 @@ namespace UFSTWSSecuritySample
             using (var stringWriter = new StringWriter())
             using (var xmlTextWriter = XmlWriter.Create(stringWriter, xmlWriterSettings))
             {
-                XmlDocument xmlDocument = new XmlDocument();
-                xmlDocument.PreserveWhitespace = true;
-                xmlDocument.LoadXml(envelope);
                 xmlDocument.WriteTo(xmlTextWriter);
                 xmlTextWriter.Flush();
                 Console.WriteLine(stringWriter.GetStringBuilder().ToString());
             }
+            Console.WriteLine("----- WriteDocument ");
+
         }
 
 
-        public void GetSoapBody(String envelope, String filePath)
+
+        public XmlNode ExtractBody(String envelope)
         {
-            var xmlWriterSettings = new XmlWriterSettings();
-            xmlWriterSettings.OmitXmlDeclaration = false;
-            xmlWriterSettings.Indent = true;
-            xmlWriterSettings.NewLineOnAttributes = true;
-            using (var stringWriter = new StringWriter())
-            using (var xmlTextWriter = XmlWriter.Create(stringWriter, xmlWriterSettings))
             {
                 XmlDocument xmlDocument = new XmlDocument();
                 xmlDocument.PreserveWhitespace = true;
@@ -62,19 +54,13 @@ namespace UFSTWSSecuritySample
                 var nsmgr = new XmlNamespaceManager(xmlDocument.NameTable);
                 nsmgr.AddNamespace("soapenv", "http://schemas.xmlsoap.org/soap/envelope/");
                 nsmgr.AddNamespace("ns", "http://skat.dk/dmr/2007/05/31/");
-                var node = xmlDocument.DocumentElement.SelectSingleNode("/soapenv:Envelope/soapenv:Body/ns:*", nsmgr);
-                node.WriteTo(xmlTextWriter);
-                xmlTextWriter.Flush();
-                //Console.WriteLine(stringWriter.GetStringBuilder().ToString());
-
-                using (StreamWriter writer = System.IO.File.AppendText(filePath))
-                {
-                    writer.WriteLine(stringWriter.GetStringBuilder().ToString());
-                }
+                XmlNode node = xmlDocument.DocumentElement.SelectSingleNode("/soapenv:Envelope/soapenv:Body/ns:*", nsmgr);
+                return node;
             }
         }
 
-        public async Task<XElement> CallService(IPayloadWriter payloadWriter, String endpoint)
+
+        public async Task<XmlDocument> CallService(IPayloadWriter payloadWriter, LinkedList<IClientIinterceptor> requestInteceptors, LinkedList<IClientIinterceptor> responseInteceptors, String endpoint)
         {
 
 
@@ -84,11 +70,14 @@ namespace UFSTWSSecuritySample
 
             var certificate = GetCertificate();
 
-            var envelope = BuildEnvelope(certificate, payloadWriter);
+            XmlDocument request1 = BuildEnvelope(certificate, payloadWriter);
+            var envelope = request1.OuterXml;
 
-            Console.WriteLine("REQUEST (with indentation)");
-            Console.WriteLine("--------------------------");
-            WriteEnvelope(envelope);
+            // Run request interceptors
+            foreach (var ci in requestInteceptors)
+            {
+                ci.handle(request1);
+            }
 
 
             using (var client = new HttpClient())
@@ -109,15 +98,20 @@ namespace UFSTWSSecuritySample
                         return null;
                     }
 
-                    Console.WriteLine("RESPONSE (with indentation)");
-                    Console.WriteLine("---------------------------");
-                    WriteEnvelope(responseEnvelope);
 
 
                     // https://stackoverflow.com/questions/16956605/validate-a-xml-signature-in-a-soap-envelope-with-net
                     XmlDocument xmlDocument = new XmlDocument();
                     xmlDocument.PreserveWhitespace = true;
                     xmlDocument.LoadXml(responseEnvelope);
+
+                    // Run response interceptors
+                    foreach (var ci in responseInteceptors)
+                    {
+                        ci.handle(xmlDocument);
+                    }
+
+
 
                     XmlNodeList xmlNodeList = xmlDocument.GetElementsByTagName("wsse:BinarySecurityToken");
                     string binarySecurityToken = xmlNodeList[0].InnerText;
@@ -140,17 +134,37 @@ namespace UFSTWSSecuritySample
                     var cert = X509Certificate2.CreateFromPem(certPem);
                     bool isTruested = cert.Equals(x509Certificate2);
                     Console.WriteLine("Certificate trusted: " + isTruested);
-                    if (ReponseFilePath != null)      
-                    {
-                        GetSoapBody(responseEnvelope, ReponseFilePath);
-                    }
-                    XElement e = XElement.Parse(responseEnvelope);
-                    return e;
+                    XmlNode node = ExtractBody(responseEnvelope);
+                    XmlDocument doc2 = ToDocument(node);
+                    //                    WriteDocument(doc2);
+                    //XElement e = XElement.Parse(responseEnvelope);
+                    return doc2;
                 }
             }
         }
 
-        private string BuildEnvelope(X509Certificate2 certificate, IPayloadWriter payloadWriter)
+        private XmlDocument ToDocument(XmlNode node)
+        {
+            var xmlWriterSettings = new XmlWriterSettings();
+            xmlWriterSettings.OmitXmlDeclaration = false;
+            xmlWriterSettings.Indent = true;
+            xmlWriterSettings.NewLineOnAttributes = true;
+            using (var stringWriter = new StringWriter())
+            using (var xmlTextWriter = XmlWriter.Create(stringWriter, xmlWriterSettings))
+            {
+                node.WriteTo(xmlTextWriter);
+                xmlTextWriter.Flush();
+                String payload = stringWriter.GetStringBuilder().ToString();
+
+                XmlDocument xmlDocument = new XmlDocument();
+                xmlDocument.PreserveWhitespace = true;
+                xmlDocument.LoadXml(payload);
+                return xmlDocument;
+            }
+
+        }
+
+        private XmlDocument BuildEnvelope(X509Certificate2 certificate, IPayloadWriter payloadWriter)
         {
             string envelope = null;
 
@@ -163,6 +177,7 @@ namespace UFSTWSSecuritySample
             // Timestamp
             var timestampExpires = dtNow.AddMinutes(50).ToString("o").Substring(0, 23) + "Z";
             var timestampId = $"TS-{Guid.NewGuid()}";
+            XmlDocument doc = new XmlDocument();
 
             using (var stream = new MemoryStream())
             {
@@ -219,7 +234,6 @@ namespace UFSTWSSecuritySample
 
                 // signing pass
                 var signable = Encoding.UTF8.GetString(stream.ToArray());
-                XmlDocument doc = new XmlDocument();
                 doc.LoadXml(signable);
 
                 // https://stackoverflow.com/a/6467877
@@ -307,10 +321,10 @@ namespace UFSTWSSecuritySample
                         "/*[local-name()='Envelope']/*[local-name()='Header']/*[local-name()='Security']");
                 securityNode.AppendChild(xmlDigitalSignature);
 
-                envelope = doc.OuterXml;
+                //envelope = doc.OuterXml;
             }
 
-            return envelope;
+            return doc;
         }
 
         private class SignedXmlWithId : SignedXml
@@ -339,6 +353,5 @@ namespace UFSTWSSecuritySample
 
         private Settings Settings { get; }
 
-        private String ReponseFilePath { get; }
     }
 }

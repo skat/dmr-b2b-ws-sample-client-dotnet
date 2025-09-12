@@ -1,10 +1,11 @@
 ﻿using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Xml;
 
 namespace UFSTWSSecuritySample
 {
     public interface IApiClient
     {
-        Task<XElement> CallService(IPayloadWriter payloadWriter, string endpoint);
+        Task<XmlDocument> CallService(IPayloadWriter payloadWriter, LinkedList<IClientIinterceptor> requestInteceptors, LinkedList<IClientIinterceptor> responseInteceptors, string endpoint);
     }
 }

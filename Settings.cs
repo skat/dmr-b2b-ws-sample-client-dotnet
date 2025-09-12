@@ -9,5 +9,8 @@ namespace UFSTWSSecuritySample
 
         public string PathPEM { get; set; }
 
+        public bool LogRequest { get; set; }
+
+        public bool LogResponse { get; set; }
     }
 }
