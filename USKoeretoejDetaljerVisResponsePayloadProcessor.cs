@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml;
@@ -17,6 +19,10 @@ namespace UFSTWSSecuritySample
             nsmgr = new XmlNamespaceManager(doc.NameTable);
             nsmgr.AddNamespace("ns", "http://skat.dk/dmr/2007/05/31/");
             nsmgr.AddNamespace("ho", "http://rep.oio.dk/skat.dk/basis/kontekst/xml/schemas/2006/09/01/");
+
+            // Build XPaths
+            Extract.Add("KoeretoejIdent", "/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejFastKombination/ns:KoeretoejIdent");
+            Extract.Add("KoeretoejOplysningStelNummer","/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejOplysningStelNummer");
         }
 
         public bool HasErrorCode(String ErrorCode)
@@ -47,15 +53,29 @@ namespace UFSTWSSecuritySample
             return errors.Count > 0;
         }
 
+        private Dictionary<String, String> Extract = new Dictionary<String, String>();
+
         public void Process()
         {
             if (!HasErrors())
             {
-                XmlNode kid = doc.SelectSingleNode("/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejFastKombination/ns:KoeretoejIdent", nsmgr);
-                XmlNode vin = doc.SelectSingleNode("/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejOplysningStelNummer", nsmgr);
-                Console.WriteLine(kid.InnerText + ";" + vin.InnerText);
+                // Build CSV record with value
+                StringBuilder sb = new StringBuilder();
+                int dictSize = Extract.Count;
+                int i = 1;
+                foreach(KeyValuePair<String, String> entry in Extract)
+                {
+                     // entry.Key contains the field name
+                    XmlNode value = doc.SelectSingleNode(entry.Value, nsmgr);
+                    sb.Append(value.InnerText);
+                    if (i<dictSize) {
+                        sb.Append(";");
+                    }
+                    i++;
+                   
+                }
+                Console.WriteLine(sb.ToString());
             }
         }
-
     }
 }
