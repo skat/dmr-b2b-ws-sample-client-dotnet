@@ -35,7 +35,7 @@ namespace UFSTWSSecuritySample
                     writer.WriteLine(stringWriter.GetStringBuilder().ToString());
                 }
             }
-             Console.WriteLine("Saved payload to file " + filePath + ".");
+             Console.WriteLine("Saved payload to file: " + filePath + ".");
         }
 
         public XmlNode ExtractSOAPBody(XmlDocument xmlDocument)
