@@ -13,6 +13,7 @@ namespace UFSTWSSecuritySample
         static async Task Main(string[] args)
         {
 
+
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
@@ -44,6 +45,7 @@ namespace UFSTWSSecuritySample
                 return;
             }
 
+            bool verbose = false;
             var requestInterceptors = new LinkedList<IClientIinterceptor>();
             if (settings.LogRequest)
             {
@@ -53,8 +55,10 @@ namespace UFSTWSSecuritySample
             if (settings.LogResponse)
             {
                 responseInterceptors.AddLast(new LogEnvelopeInterceptor());
+                verbose = true;
             }
-
+        
+            responseInterceptors.AddLast(new ValidateWSSecurityResponseInterceptor(settings.PathPEM, verbose));
             var command = args[0];
             switch (command)
             {
@@ -67,16 +71,23 @@ namespace UFSTWSSecuritySample
                         VehicleIdType vehicleIdType = VehicleIdType.KID;
                         IApiClient client = new ApiClient(settings);
 
-                        int m = Int32.Parse(next);
+                        long m = long.Parse(next);
+                        long initialKid = long.Parse(id);
                         for (int i = 1; i <= m; i++)
                         {
-                            XmlDocument response = await client.CallService(new VehicleDetailsPayloadWriter(id, vehicleIdType), requestInterceptors, responseInterceptors, endpoints.USMiljoeordningForBiler);
+                            string nextKid = (initialKid - 1 + i).ToString();
+                            Console.WriteLine("nextKid=" + nextKid);
+                            XmlDocument response = await client.CallService(new VehicleDetailsPayloadWriter(nextKid, vehicleIdType), requestInterceptors, responseInterceptors, endpoints.USMiljoeordningForBiler);
                             if (response != null)
                             {
                                 USKoeretoejDetaljerVisResponsePayloadProcessor proc = new USKoeretoejDetaljerVisResponsePayloadProcessor(response);
                                 if (!proc.HasErrors())
                                 {
                                     proc.Process();
+                                }
+                                else
+                                {
+                                    Console.WriteLine("nextKid=" + nextKid + " has errors:");
                                 }
                             }
                         }

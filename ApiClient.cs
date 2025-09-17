@@ -98,8 +98,6 @@ namespace UFSTWSSecuritySample
                         return null;
                     }
 
-
-
                     // https://stackoverflow.com/questions/16956605/validate-a-xml-signature-in-a-soap-envelope-with-net
                     XmlDocument xmlDocument = new XmlDocument();
                     xmlDocument.PreserveWhitespace = true;
@@ -111,33 +109,9 @@ namespace UFSTWSSecuritySample
                         ci.handle(xmlDocument);
                     }
 
-
-
-                    XmlNodeList xmlNodeList = xmlDocument.GetElementsByTagName("wsse:BinarySecurityToken");
-                    string binarySecurityToken = xmlNodeList[0].InnerText;
-                    // Wrap in PWM to satisfy X509CertificateLoader.LoadCertificate API:
-                    string binarySecurityTokenPEM = "-----BEGIN CERTIFICATE-----\n" + binarySecurityToken + "\n-----END CERTIFICATE-----";
-                    X509Certificate2 x509Certificate2 = X509CertificateLoader.LoadCertificate(Encoding.UTF8.GetBytes(binarySecurityTokenPEM));
-
-                    xmlNodeList = xmlDocument.GetElementsByTagName("Signature", "http://www.w3.org/2000/09/xmldsig#");
-                    XmlElement signature = (XmlElement)xmlNodeList[0];
-                    SignedXmlWithId signedXml = new SignedXmlWithId(xmlDocument);
-                    signedXml.LoadXml(signature);
-
-                    bool isOk = signedXml.CheckSignature(x509Certificate2, true);
-                    Console.WriteLine("---------------------------");
-                    Console.WriteLine("Signature verified: " + isOk);
-
-                    Console.WriteLine(isOk);
-                    // Now check that we trust the certificate 
-                    var certPem = File.ReadAllText(Settings.PathPEM);
-                    var cert = X509Certificate2.CreateFromPem(certPem);
-                    bool isTruested = cert.Equals(x509Certificate2);
-                    Console.WriteLine("Certificate trusted: " + isTruested);
+                    // Extract and return body as XmlDocument
                     XmlNode node = ExtractBody(responseEnvelope);
                     XmlDocument doc2 = ToDocument(node);
-                    //                    WriteDocument(doc2);
-                    //XElement e = XElement.Parse(responseEnvelope);
                     return doc2;
                 }
             }
@@ -352,6 +326,5 @@ namespace UFSTWSSecuritySample
         }
 
         private Settings Settings { get; }
-
     }
 }
