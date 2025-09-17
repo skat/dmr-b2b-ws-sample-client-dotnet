@@ -13,6 +13,8 @@ namespace UFSTWSSecuritySample
 
         private XmlNamespaceManager nsmgr;
 
+        public string OutputPath { get; set; } 
+
         public USKoeretoejDetaljerVisResponsePayloadProcessor(XmlDocument document)
         {
             doc = document;
@@ -22,7 +24,7 @@ namespace UFSTWSSecuritySample
 
             // Build XPaths
             Extract.Add("KoeretoejIdent", "/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejFastKombination/ns:KoeretoejIdent");
-            Extract.Add("KoeretoejOplysningStelNummer","/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejOplysningStelNummer");
+            Extract.Add("KoeretoejOplysningStelNummer", "/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejOplysningStelNummer");
         }
 
         public bool HasErrorCode(String ErrorCode)
@@ -32,7 +34,7 @@ namespace UFSTWSSecuritySample
             return current != null;
         }
 
-        private LinkedList<String> GetErrors()
+        public LinkedList<String> GetErrors()
         {
             LinkedList<String> errors = new LinkedList<String>();
             XmlNodeList SvarStrukturList = doc.SelectNodes("/ns:USKoeretoejDetaljerVis_O/ho:HovedOplysningerSvar/ho:SvarStruktur", nsmgr);
@@ -63,18 +65,30 @@ namespace UFSTWSSecuritySample
                 StringBuilder sb = new StringBuilder();
                 int dictSize = Extract.Count;
                 int i = 1;
-                foreach(KeyValuePair<String, String> entry in Extract)
+                foreach (KeyValuePair<String, String> entry in Extract)
                 {
-                     // entry.Key contains the field name
+                    // entry.Key contains the field name
                     XmlNode value = doc.SelectSingleNode(entry.Value, nsmgr);
                     sb.Append(value.InnerText);
-                    if (i<dictSize) {
+                    if (i < dictSize)
+                    {
                         sb.Append(";");
                     }
                     i++;
-                   
+
                 }
-                Console.WriteLine(sb.ToString());
+
+                if (OutputPath != null)
+                {
+                    using (StreamWriter sw = File.AppendText(OutputPath))
+                    {
+                        sw.WriteLine(sb.ToString());
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(sb.ToString());
+                }
             }
         }
     }

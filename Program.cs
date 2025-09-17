@@ -73,21 +73,24 @@ namespace UFSTWSSecuritySample
 
                         long m = long.Parse(next);
                         long initialKid = long.Parse(id);
+                        string outputPath = "USKoeretoejDetaljerVis_SampleResponse-" + id + "-" + next + ".csv";
                         for (int i = 1; i <= m; i++)
                         {
                             string nextKid = (initialKid - 1 + i).ToString();
-                            Console.WriteLine("nextKid=" + nextKid);
+                            // Console.WriteLine("nextKid=" + nextKid);
                             XmlDocument response = await client.CallService(new VehicleDetailsPayloadWriter(nextKid, vehicleIdType), requestInterceptors, responseInterceptors, endpoints.USMiljoeordningForBiler);
                             if (response != null)
                             {
                                 USKoeretoejDetaljerVisResponsePayloadProcessor proc = new USKoeretoejDetaljerVisResponsePayloadProcessor(response);
+                                proc.OutputPath = outputPath;
                                 if (!proc.HasErrors())
                                 {
                                     proc.Process();
+                                    Console.WriteLine("Response for KID = " + nextKid + " processed successfully.");
                                 }
                                 else
                                 {
-                                    Console.WriteLine("nextKid=" + nextKid + " has errors:");
+                                    Console.WriteLine("Response for KID = " + nextKid + " contains error code = " + proc.GetErrors().First() + ".");
                                 }
                             }
                         }
