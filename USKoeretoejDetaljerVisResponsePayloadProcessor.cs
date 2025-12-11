@@ -13,7 +13,7 @@ namespace UFSTWSSecuritySample
 
         private XmlNamespaceManager nsmgr;
 
-        public string OutputPath { get; set; } 
+        public string OutputPath { get; set; }
 
         public USKoeretoejDetaljerVisResponsePayloadProcessor(XmlDocument document)
         {
@@ -25,6 +25,7 @@ namespace UFSTWSSecuritySample
             // Build XPaths
             Extract.Add("KoeretoejIdent", "/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejFastKombination/ns:KoeretoejIdent");
             Extract.Add("KoeretoejOplysningStelNummer", "/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejOplysningStelNummer");
+            Extract.Add("RegistreringNummerNummer", "/ns:USKoeretoejDetaljerVis_O/ns:KoeretoejDetaljerVisSamling/ns:KoeretoejDetaljerVis/ns:KoeretoejOplysningStruktur/ns:KoeretoejFastKombination/ns:RegistreringNummerNummer");
         }
 
         public bool HasErrorCode(String ErrorCode)
