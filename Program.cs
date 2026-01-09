@@ -97,7 +97,7 @@ namespace UFSTWSSecuritySample
                     }
                     break;
                 case "PayloadWriter":
-                    if (args.Length == 4)
+                    if (args.Length == 4 || args.Length == 5)
                     {
                         Console.WriteLine("Running in 'PayloadWriter' mode.");
                         var service = args[1];
@@ -109,6 +109,17 @@ namespace UFSTWSSecuritySample
                         {
                             case "USKoeretoejDetaljerVis":
                                 XmlNode node = await client.CallService(new VehicleDetailsPayloadWriter(id, vehicleIdType), requestInterceptors, responseInterceptors, endpoints.USMiljoeordningForBiler);
+                                break;
+                            case "USKoeretoejTekniskDataHent":
+                                var date = args[4];
+                                DateTime dtSearch = DateTime.Parse(date);
+                                String dtSearchISO = dtSearch.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                                XmlDocument response = await client.CallService(new USKoeretoejTekniskDataHentIPayloadWriter(id, vehicleIdType, dtSearchISO), requestInterceptors, responseInterceptors, endpoints.USMiljoeordningForBiler);
+                                USKoeretoejTekniskDataHentOProcessor proc = new USKoeretoejTekniskDataHentOProcessor(response);
+                                if (!proc.HasErrors())
+                                {
+                                    proc.Process();
+                                }
                                 break;
                         }
                     }
